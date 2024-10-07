@@ -1,53 +1,46 @@
+import { useRef } from "react";
+import { memo } from "react";
 import { useEffect, useState } from "react";
 import "./Download.css";
 import "../App.css";
 import { useNavigate } from "react-router-dom";
-
-export function Download(): React.ReactElement {
+export const Download = memo(function Download() {
   const navigate = useNavigate();
-
-  const { ipcRenderer } = window.electron;
-
-  const [startTime, setStartTime] = useState(0);
+  const {
+    ipcRenderer
+  } = window.electron;
+  const startTime = useRef(0);
   const [progress, setProgress] = useState(0);
   const [step, setStep] = useState<"loading" | "downloading" | "done" | "error">("loading");
-
   useEffect(() => {
-    setStartTime(Date.now());
+    startTime.current = Date.now();
     void ipcRenderer.invoke("DOWNLOAD");
   }, []);
-
   useEffect(() => {
     const listeners: Array<() => void> = [];
-
-    listeners.push(
-      ipcRenderer.on("DOWNLOAD_PROGRESS", (progress) => {
-        setStep("downloading");
-        setProgress(progress as number);
-      }),
-    );
-    listeners.push(
-      ipcRenderer.on("DOWNLOAD_DONE", () => {
-        const waitTime = 1000 - (Date.now() - startTime);
-        if (waitTime > 0) {
-          const timeout = setTimeout(() => navigate("/action"), waitTime);
-          listeners.push(() => clearTimeout(timeout));
-        } else {
-          navigate("/action");
-        }
-      }),
-    );
+    listeners.push(ipcRenderer.on("DOWNLOAD_PROGRESS", progress => {
+      setStep("downloading");
+      setProgress((progress as number));
+    }));
+    listeners.push(ipcRenderer.on("DOWNLOAD_DONE", () => {
+      const waitTime = 1000 - (Date.now() - startTime.current);
+      if (waitTime > 0) {
+        const timeout = setTimeout(() => navigate("/action"), waitTime);
+        listeners.push(() => clearTimeout(timeout));
+      } else {
+        navigate("/action");
+      }
+    }));
     listeners.push(ipcRenderer.on("DOWNLOAD_ERROR", () => setStep("error")));
-
     return () => {
-      listeners.forEach((listener) => listener());
+      listeners.forEach(listener => listener());
     };
   });
-
-  return (
-    <div className="page download-page">
+  return <div className="page download-page">
       <div className="download-progress">
-        <div className="download-progress-bar" style={{ width: `${progress * 100}%` }} />
+        <div className="download-progress-bar" style={{
+        width: `${progress * 100}%`
+      }} />
       </div>
       <div className="download-step">
         {step === "loading" && "Loading..."}
@@ -55,6 +48,5 @@ export function Download(): React.ReactElement {
         {step === "done" && "Done!"}
         {step === "error" && "Error!"}
       </div>
-    </div>
-  );
-}
+    </div>;
+});

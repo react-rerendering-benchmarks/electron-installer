@@ -1,10 +1,9 @@
+import { memo } from "react";
 import { Link } from "react-router-dom";
 import "./License.css";
 import "../App.css";
-
-export function License(): React.ReactElement {
-  return (
-    <div className="page license-page">
+export const License = memo(function License() {
+  return <div className="page license-page">
       <div className="license">
         THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
         INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
@@ -18,6 +17,5 @@ export function License(): React.ReactElement {
           Agree
         </Link>
       </div>
-    </div>
-  );
-}
+    </div>;
+});
